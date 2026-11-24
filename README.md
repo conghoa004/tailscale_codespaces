@@ -88,8 +88,8 @@ Automatic authentication allows your Codespace to automatically join your Tailne
 You can add the secret globally for all your Codespaces or specifically for this repository:
 
 1. In GitHub, go to your repository **Settings** (or user **Settings** > **Codespaces** for global use).
-2. Navigate to **Secrets and variables** > **Codespaces**.
-3. Click **New repository secret** (or **New user secret**).
+2. Navigate to **Secrets** > **Codespace user secrets**.
+3. Click or **New secret**.
 4. Name: `TS_AUTH_KEY`
 5. Value: Paste your Tailscale auth key (`tskey-auth-...`).
 6. Save the secret.
