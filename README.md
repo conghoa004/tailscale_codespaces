@@ -4,7 +4,7 @@
 [![GitHub Codespaces](https://img.shields.io/badge/GitHub-Codespaces-181717?logo=github&logoColor=white)](https://github.com/features/codespaces)
 [![Dev Containers](https://img.shields.io/badge/Dev_Containers-Ready-blueviolet?logo=visualstudiocode&logoColor=white)](https://containers.dev)
 
-A ready-to-use development container configuration that connects your **GitHub Codespaces** (or local **VS Code Dev Containers**) directly into your private **Tailscale Tailnet**.
+A ready-to-use development container configuration that connects your **GitHub Codespaces** (or local **VS Code Dev Containers**) directly into your private **Tailscale Tailnet** via interactive login.
 
 ---
 
@@ -14,9 +14,10 @@ A ready-to-use development container configuration that connects your **GitHub C
 - [Key Features & Benefits](#key-features--benefits)
 - [Project Structure](#project-structure)
 - [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-  - [Method 1: Automatic Authentication (Recommended)](#method-1-automatic-authentication-recommended)
-  - [Method 2: Manual Interactive Authentication](#method-2-manual-interactive-authentication)
+- [Quick Start (Interactive Login)](#quick-start-interactive-login)
+  - [Step 1: Launch the Codespace](#step-1-launch-the-codespace)
+  - [Step 2: Authenticate with Tailscale](#step-2-authenticate-with-tailscale)
+  - [Step 3: Verify Connection](#step-3-verify-connection)
 - [Running Locally with Dev Containers](#running-locally-with-dev-containers)
 - [Configuration Breakdown](#configuration-breakdown)
 - [Common Use Cases](#common-use-cases)
@@ -34,7 +35,7 @@ A ready-to-use development container configuration that connects your **GitHub C
 
 By default, GitHub Codespaces run inside isolated cloud virtual machines. While GitHub provides built-in port forwarding, connecting to private networks, internal databases, staging environments, or homelab hardware usually requires complicated tunnels or exposing ports to the public internet.
 
-This repository uses the official [Tailscale Dev Container Feature](https://github.com/tailscale/codespace) (`ghcr.io/tailscale/codespace/tailscale`) to make your Codespace an authorized node inside your encrypted Tailscale network (Tailnet).
+This repository uses the official [Tailscale Dev Container Feature](https://github.com/tailscale/codespace) (`ghcr.io/tailscale/codespace/tailscale`) to make your Codespace an authorized node inside your encrypted Tailscale network (Tailnet) without needing any pre-configured GitHub secrets.
 
 ---
 
@@ -42,10 +43,10 @@ This repository uses the official [Tailscale Dev Container Feature](https://gith
 
 - **Zero-trust Private Networking**: Secure WireGuard-based mesh networking directly inside the Codespace container.
 - **Bi-directional Access**:
-  - Outbound: Access your home lab, internal VPCs, private databases, license servers, and internal Git servers directly from Codespaces.
+  - Outbound: Access your homelab, internal VPCs, private databases, license servers, and internal Git servers directly from Codespaces.
   - Inbound: Connect to servers or processes running inside Codespaces from your laptop, mobile phone, or desktop using private MagicDNS or 100.x.y.z Tailscale IPs.
+- **No Secret Setup Required**: Easily authenticate on-demand via the browser link generated directly in your terminal.
 - **Zero Configuration Port Tunnels**: No need to rely on public URLs or GitHub port forward permissions.
-- **Ephemeral Node Support**: Automatically clean up inactive Codespaces from your Tailnet when deleted.
 - **Tailscale SSH Compatible**: SSH into your Codespace terminal securely from any authorized device.
 
 ---
@@ -69,56 +70,47 @@ This repository uses the official [Tailscale Dev Container Feature](https://gith
 
 ---
 
-## Quick Start
+## Quick Start (Interactive Login)
 
-### Method 1: Automatic Authentication (Recommended)
+You can connect your Codespace to your Tailnet interactively in a few simple steps without creating or managing API keys.
 
-Automatic authentication allows your Codespace to automatically join your Tailnet immediately upon boot without any manual login prompt.
-
-#### Step 1: Generate an Auth Key in Tailscale
-1. Log in to the [Tailscale Admin Console](https://login.tailscale.com/admin/settings/keys).
-2. Click **Generate auth key...**.
-3. Configure the key settings:
-   - **Reusable**: Optional (Enable if you plan to launch multiple Codespaces with the same key).
-   - **Ephemeral**: **Recommended (Yes)** — Codespaces are temporary environments. Ephemeral keys ensure the node is automatically removed from your Tailnet when the Codespace is shut down or deleted.
-   - **Tags**: (Optional) Assign ACL tags (e.g., `tag:codespace`, `tag:dev`) to apply specific access rules.
-4. Click **Generate key** and copy the generated key (`tskey-auth-...`).
-
-#### Step 2: Add Secret to GitHub
-You can add the secret globally for all your Codespaces or specifically for this repository:
-
-1. In GitHub, go to your repository **Settings** (or user **Settings** > **Codespaces** for global use).
-2. Navigate to **Secrets** > **Codespace user secrets**.
-3. Click or **New secret**.
-4. Name: `TS_AUTH_KEY`
-5. Value: Paste your Tailscale auth key (`tskey-auth-...`).
-6. Save the secret.
-
-#### Step 3: Launch Codespace
-1. Click the green **Code** button on GitHub.
+### Step 1: Launch the Codespace
+1. In your GitHub repository, click the green **Code** button.
 2. Select the **Codespaces** tab.
 3. Click **Create codespace on main**.
-4. Once the terminal opens, your Codespace will automatically authenticate and join your Tailnet!
+4. Wait for the container to build and the VS Code editor to open.
 
----
-
-### Method 2: Manual Interactive Authentication
-
-If you do not want to configure a GitHub secret, you can log in manually:
-
-1. Create and open your Codespace normally.
-2. Open the integrated terminal inside VS Code.
-3. Run the following command:
+### Step 2: Authenticate with Tailscale
+1. Open the integrated terminal in VS Code (`Ctrl+` `~` or via the application menu).
+2. Run the following command:
    ```bash
    sudo tailscale up --accept-routes
    ```
-4. A login URL will appear in the terminal:
+   > **Tip:** If you also want to be able to SSH into this Codespace from your other Tailscale devices, add `--ssh`:
+   > ```bash
+   > sudo tailscale up --accept-routes --ssh
+   > ```
+3. Tailscale will output an authentication link:
    ```text
    To authenticate, visit:
-   https://login.tailscale.com/a/xxxxxx
+
+       https://login.tailscale.com/a/xxxxxx
    ```
-5. Click the URL or copy-paste it into your browser and approve the device.
-6. The terminal will confirm success: `Success.`
+4. Click the link (or copy-paste it into your web browser) and click **Connect** / log in to approve the device.
+5. In the terminal, you will see confirmation:
+   ```text
+   Success.
+   ```
+
+### Step 3: Verify Connection
+Check that your Codespace is connected and see your assigned Tailscale IP:
+```bash
+# Check status and see connected Tailnet peers
+tailscale status
+
+# Check the IPv4 address of this Codespace
+tailscale ip -4
+```
 
 ---
 
@@ -141,7 +133,10 @@ You can also run this setup locally on your computer with VS Code:
    ```text
    Dev Containers: Reopen in Container
    ```
-6. Inside the container terminal, authenticate via `sudo tailscale up` or provide `TS_AUTH_KEY` in your local environment.
+6. Inside the container terminal, log in interactively:
+   ```bash
+   sudo tailscale up --accept-routes
+   ```
 
 ---
 
@@ -166,7 +161,7 @@ The configuration resides in [`.devcontainer/devcontainer.json`](.devcontainer/d
 ### Key Components:
 - **`runArgs: ["--device=/dev/net/tun"]`**: Tailscale creates a virtual TUN network device interface. Exposing `/dev/net/tun` to the container allows kernel-level Tailscale networking.
 - **`features.ghcr.io/tailscale/codespace/tailscale`**: The official Tailscale Dev Container feature. It installs the `tailscale` CLI and `tailscaled` daemon, mounts state volumes (`/var/lib/tailscale`), and sets up background network daemons.
-- **State Persistence**: The feature automatically creates a dedicated Docker volume (`tailscale-${devcontainerId}`) mapped to `/var/lib/tailscale`, so your login state persists across Codespace restarts and rebuilds.
+- **State Persistence**: The feature automatically creates a dedicated Docker volume (`tailscale-${devcontainerId}`) mapped to `/var/lib/tailscale`, so your login session persists across Codespace restarts and rebuilds.
 
 ---
 
@@ -176,7 +171,7 @@ The configuration resides in [`.devcontainer/devcontainer.json`](.devcontainer/d
 Once connected, any private resource in your Tailnet is accessible using its MagicDNS name or 100.x.y.z IP:
 
 ```bash
-# Connect to a PostgreSQL database hosted in your home lab or private cloud
+# Connect to a PostgreSQL database hosted in your homelab or private cloud
 psql -h homelab-postgres -U postgres -d mydb
 
 # Query an internal staging API
@@ -233,6 +228,7 @@ ssh <codespace-tailscale-ip>
 | `tailscale ping <peer>` | Ping another node on your Tailnet over WireGuard. |
 | `sudo tailscale up` | Connect / update Tailscale flags (e.g. `--ssh`, `--accept-routes`). |
 | `sudo tailscale down` | Disconnect the Codespace from your Tailnet. |
+| `tailscale logout` | Log out and disconnect the node from your Tailscale account. |
 | `tailscale netcheck` | Perform a diagnostic report on network and NAT traversal. |
 | `tailscale serve status` | Show active Tailscale Serve proxy configurations. |
 
@@ -250,16 +246,22 @@ Ensure that `runArgs: ["--device=/dev/net/tun"]` is present in your `devcontaine
 ]
 ```
 
-### 2. Old/Offline Codespaces cluttering the Tailscale Machines list
-Generate your auth key with the **Ephemeral** option enabled. With ephemeral keys, Tailscale will automatically prune the node from your machine list shortly after the Codespace terminates.
+### 2. "tailscaled is not running" or permission errors
+Ensure you run `tailscale up` with `sudo`:
+```bash
+sudo tailscale up --accept-routes
+```
+You can also check daemon status:
+```bash
+sudo tailscale status
+```
 
-### 3. Codespace did not connect automatically
-- Verify the secret name in GitHub is exactly `TS_AUTH_KEY` (all caps, with underscores).
-- Check if the secret was granted access to this repository under *Settings* > *Secrets and variables* > *Codespaces*.
-- Check the startup logs in Codespace:
-  ```bash
-  sudo tailscale status
-  ```
+### 3. Cleaning up old Codespaces from Tailnet
+When you delete or stop using a Codespace, you can disconnect it before deleting:
+```bash
+sudo tailscale logout
+```
+Alternatively, remove the machine anytime from the [Tailscale Admin Console](https://login.tailscale.com/admin/machines).
 
 ---
 
