@@ -1,6 +1,6 @@
 
 {
-  "name": "Kaggle TCP Relay",
+  "name": "Tailscale Codespaces",
   "runArgs": [
     "--device=/dev/net/tun"
   ],
